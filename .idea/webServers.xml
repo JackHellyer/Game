@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="8590e685-3305-4d48-a862-914bc82d921e" name="Game" url="http://34.240.113.211">
+        <fileTransfer host="34.240.113.211" port="22" privateKey="$USER_HOME$/Desktop/mmorpg.pem" rootFolder="/home/ubuntu/game" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
