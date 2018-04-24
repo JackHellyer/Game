@@ -2,6 +2,7 @@ angular.module('mainCtrl', [])
 
     .controller('mainController', function($rootScope, $location, Auth) {
 
+        //ctx.style.display = 'none';
         var vm = this;
 
         //vm.processing = true;
@@ -42,9 +43,9 @@ angular.module('mainCtrl', [])
                 });
         };
 
-
+        var socket = io.connect();
         jQuery(function ($) {
-            var socket = io.connect();
+
             var $messageForm = $('#send-message');
             var $messageBox = $('#message');
             var $chat = $('#chat');
@@ -68,7 +69,42 @@ angular.module('mainCtrl', [])
                     });
 
                 });
+
+
+
         });
+
+
+        if(document.getElementById("ctx") != null)
+        {
+            //var socket = io.connect();
+            //ctx.style.display = 'true';
+            var canvas = document.getElementById("ctx").getContext('2d');
+            //var ctx  = canvas;
+            //var canvas = ctx.getContext("2d");
+            canvas.font = '30px Arial';
+            //var socket = io();
+            socket.on('newPositions', function(data){
+                canvas.clearRect(0,0,500,500);
+                for( var i = 0; i < data.length; i++)
+                {
+                    canvas.fillText('P', data[i].x, data[i].y);
+
+                }
+
+
+            });
+        }
+
+
+
+
+
+
+
+
+
+
 
         // function to handle logout
 

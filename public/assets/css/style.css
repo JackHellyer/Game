@@ -2,11 +2,21 @@
 {  width: 400px;
     height: 500px;
     background-color: aliceblue;
-    overflow: auto;
+    overflow: scroll;
 
 }
 
 #chatContainer
 {
     float: right;
+}
+
+
+#ctx
+{
+    width: 500px;
+    height: 500px;
+    border: 1px solid black;
+    float: left;
+    
 }

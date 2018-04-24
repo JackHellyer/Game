@@ -45,9 +45,59 @@ res.sendFile(path.join(__dirname + '/public/app/views/index.html'));
 server.listen(1337);
 console.log('1337 is the magic port!');
 
+var SOCKET_LIST = {};
 
 io.sockets.on('connection', function (socket){
-        socket.on('send message', function (data){
-                io.sockets.emit('new message', data );
-            });
+        console.log('socket connection');
+    socket.id = Math.random();
+    socket.x = 0;
+    socket.y = 0;
+    SOCKET_LIST[socket.id] = socket;
+    //console.log(socket.id);
+    console.log(Object.keys(io.sockets.sockets));
+
+    socket.on('send message', function (data){
+        io.sockets.emit('new message', data );
     });
+
+
+
+        //socket.number = "" + Math.floor(10 * Math.random());
+
+        socket.on('disconnect', function(){
+            delete SOCKET_LIST[socket.id];
+        })
+
+    });
+
+
+setInterval(function(){
+
+    var pack = [];
+    for (var i in SOCKET_LIST) {
+        var socket = SOCKET_LIST[i];
+        socket.x++;
+        socket.y++;
+        //console.log(socket.x);
+        pack.push({
+            x: socket.x,
+            y: socket.y
+            //number: socket.number
+        });
+
+        }
+
+
+
+
+
+    for(var i in SOCKET_LIST){
+        var socket = SOCKET_LIST[i];
+        socket.emit('newPositions', pack);
+
+
+    }
+
+
+
+}, 1000/25);
