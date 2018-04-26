@@ -84,6 +84,8 @@ angular.module('authService',[])
     })
 
 
+    
+
     //application configuration to integrate token into requests
 
     .factory('AuthInterceptor', function($q, $location, AuthToken) {

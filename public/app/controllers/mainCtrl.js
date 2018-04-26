@@ -43,58 +43,7 @@ angular.module('mainCtrl', [])
                 });
         };
 
-        var socket = io.connect();
-        jQuery(function ($) {
 
-            var $messageForm = $('#send-message');
-            var $messageBox = $('#message');
-            var $chat = $('#chat');
-            //var $username =
-
-            Auth.getUser()
-                .then(function (data) {
-                    vm.user = data.data;
-                    $messageForm.submit(function (e) {
-                        //console.log($messageBox.val());
-                        e.preventDefault();
-                        socket.emit('send message', vm.user.username + ": " + $messageBox.val());
-                        $messageBox.val('');
-                    });
-
-                    socket.on('new message', function (data) {
-                        $chat.animate({scrollTop: $chat.prop("scrollHeight")}, 500);
-                        $chat.append(data + "<br/>");
-
-
-                    });
-
-                });
-
-
-
-        });
-
-
-        if(document.getElementById("ctx") != null)
-        {
-            //var socket = io.connect();
-            //ctx.style.display = 'true';
-            var canvas = document.getElementById("ctx").getContext('2d');
-            //var ctx  = canvas;
-            //var canvas = ctx.getContext("2d");
-            canvas.font = '30px Arial';
-            //var socket = io();
-            socket.on('newPositions', function(data){
-                canvas.clearRect(0,0,500,500);
-                for( var i = 0; i < data.length; i++)
-                {
-                    canvas.fillText('P', data[i].x, data[i].y);
-
-                }
-
-
-            });
-        }
 
 
 

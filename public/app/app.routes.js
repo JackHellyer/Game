@@ -19,7 +19,7 @@ angular.module('app.routes', ["ngRoute"])
 
             .when('/game', {
                 templateUrl: 'app/views/pages/game.html',
-                controller: 'mainController',
+                controller: 'gameController',
                 controllerAs: 'game'
                 //access: {restricted: true}
 

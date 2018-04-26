@@ -4,7 +4,8 @@ angular.module('Game', [
     'authService',
     'mainCtrl',
     'userCtrl',
-    'userService'
+    'userService',
+    'gameCtrl'
 ])
 
 // application configuration to integrate token into requests
