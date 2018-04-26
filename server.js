@@ -65,6 +65,12 @@ var Entity = function() {
         self.x += self.xSpeed;
         self.y += self.ySpeed;
     }
+
+    self.getDistance = function(pt){
+        return Math.sqrt(Math.pow(self.x - pt.x, 2) + Math.pow(self.y - pt.y, 2));
+    }
+
+
     return self;
 }
 
@@ -77,6 +83,8 @@ var Player = function(id) {
     self.moveLeft = false;
     self.moveUp = false;
     self.moveDown = false;
+    self.attack = false;
+    self.mouseAngle = 0;
     self.speed = 10;
 
     var super_refresh = self.refresh;
@@ -84,6 +92,16 @@ var Player = function(id) {
     self.refresh = function() {
         self.refreshSpeed();
         super_refresh();
+
+        if(self.attack)
+            self.shootBullet(self.mouseAngle);
+
+    }
+
+    self.shootBullet = function(angle) {
+        var b = Bullet(self.id, angle);
+        b.x = self.x;
+        b.y = self.y;
     }
 
 
@@ -124,6 +142,10 @@ Player.onConnect = function(socket){
             player.moveLeft = data.state;
         else if(data.input === 'up')
             player.moveUp = data.state;
+        else if(data.input === 'attack')
+            player.attack = data.state;
+        else if (data.input === 'mouseAngle')
+            player.mouseAngle = data.state;
 
 
     });
@@ -150,12 +172,12 @@ Player.refresh = function() {
     return pack;
 }
 
-var Bullet = function(angle) {
+var Bullet = function(parent, angle) {
     var self = Entity();
     self.id = Math.random();
     self.xSpeed = Math.cos(angle/180*Math.PI) * 10;
     self.ySpeed = Math.sin(angle/180*Math.PI) * 10;
-
+    self.parent = parent;
     self.timer = 0;
     self.toRemove = false;
 
@@ -164,6 +186,14 @@ var Bullet = function(angle) {
         if(self.timer++ > 100)
             self.toRemove = true;
         super_refresh();
+
+        for(var i in Player.list)
+        {
+            var plyr = Player.list[i];
+            if(self.getDistance(plyr) < 30 && self.parent !== plyr.id) {
+                self.toRemove = true;
+            }
+        }
     }
     Bullet.list[self.id] = self;
     return self;
@@ -172,15 +202,17 @@ var Bullet = function(angle) {
 Bullet.list = {};
 
 Bullet.refresh = function() {
-    if(Math.random() < 0.1)
-        Bullet(Math.random() * 360);
-
 
     var pack = [];
 
     for (var i in Bullet.list) {
         var bullet = Bullet.list[i];
         bullet.refresh();
+        if(bullet.toRemove)
+
+            delete Bullet.list[i];
+
+        else
         pack.push({
             x:bullet.x,
             y:bullet.y
