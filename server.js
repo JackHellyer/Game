@@ -125,6 +125,12 @@ var Player = function(id) {
     }
 
     Player.list[id] = self;
+    initPack.player.push({
+        id: self.id,
+        x: self.x,
+        y: self.y,
+        number: self.number
+    })
     return self;
 }
 
@@ -154,6 +160,7 @@ Player.onConnect = function(socket){
 
 Player.onDisconnect = function(socket){
     delete Player.list[socket.id];
+    removePack.player.push(socket.id);
 }
 
 Player.refresh = function() {
@@ -163,9 +170,10 @@ Player.refresh = function() {
         player.refresh();
         //console.log(player.x);
         pack.push({
+            id: player.id,
             x: player.x,
-            y: player.y,
-            number: player.number
+            y: player.y
+            //number: player.number
             //number: socket.number
         });
     }
@@ -196,6 +204,11 @@ var Bullet = function(parent, angle) {
         }
     }
     Bullet.list[self.id] = self;
+    initPack.bullet.push({
+        id:self.id,
+        x:self.x,
+        y:self.y
+    });
     return self;
 }
 
@@ -209,11 +222,13 @@ Bullet.refresh = function() {
         var bullet = Bullet.list[i];
         bullet.refresh();
         if(bullet.toRemove)
-
+        {
             delete Bullet.list[i];
-
+            removePack.bullet.push(bullet.id);
+        }
         else
         pack.push({
+            id:bullet.id,
             x:bullet.x,
             y:bullet.y
         });
@@ -253,7 +268,8 @@ io.sockets.on('connection', function (socket){
 
 
 
-
+var initPack = {player:[], bullet:[]};
+var removePack = {player:[], bullet:[]};
 
 setInterval(function(){
 
@@ -264,12 +280,15 @@ setInterval(function(){
 
     for(var i in socketList){
         var socket = socketList[i];
-        socket.emit('newPositions', pack);
-
+        socket.emit('init', initPack);
+        socket.emit('refresh', pack);
+        socket.emit('remove', removePack);
 
     }
-
-
+    initPack.player = [];
+    initPack.bullet = [];
+    removePack.player = [];
+    removePack.bullet = [];
 
 }, 1000/25);
 
