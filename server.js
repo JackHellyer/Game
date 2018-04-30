@@ -78,6 +78,8 @@ var Player = function(id) {
 
     var self = Entity();
     self.id = id;
+    self.x = 500;
+    self.y = 500;
     self.number = "" + Math.floor(10 * Math.random());
     self.moveRight = false;
     self.moveLeft = false;
@@ -86,6 +88,10 @@ var Player = function(id) {
     self.attack = false;
     self.mouseAngle = 0;
     self.speed = 10;
+    self.hp = 100;
+    self.maxHp = 100;
+    self.exp = 0;
+    self.level = 1;
 
     var super_refresh = self.refresh;
 
@@ -108,29 +114,50 @@ var Player = function(id) {
 
 
     self.refreshSpeed = function() {
-        if(self.moveRight)
+        if(self.moveRight && self.x < 1450)
             self.xSpeed = self.speed;
-        else if(self.moveLeft)
+        else if(self.moveLeft && self.x > 250)
             self.xSpeed = -self.speed;
         else
             self.xSpeed = 0;
 
 
-        if(self.moveUp)
+        if(self.moveUp && self.y > 250)
             self.ySpeed = -self.speed;
-        else if(self.moveDown)
+        else if(self.moveDown && self.y < 1150)
             self.ySpeed = self.speed;
         else
             self.ySpeed = 0;
     }
 
+    self.getInitPack = function() {
+        return{
+            id:self.id,
+            x:self.x,
+            y:self.y,
+            number:self.number,
+            hp:self.hp,
+            maxHp: self.maxHp,
+            exp:self.exp,
+            level: self.level
+        };
+
+
+    }
+
+    self.getRefreshedPack = function () {
+        return{
+            id: self.id,
+            x: self.x,
+            y: self.y,
+            hp: self.hp,
+            exp: self.exp,
+            level: self.level
+        };
+    }
+
     Player.list[id] = self;
-    initPack.player.push({
-        id: self.id,
-        x: self.x,
-        y: self.y,
-        number: self.number
-    })
+    initPack.player.push(self.getInitPack())
     return self;
 }
 
@@ -156,6 +183,23 @@ Player.onConnect = function(socket){
 
     });
 
+
+
+
+    socket.emit('init',{
+            selfId:socket.id,
+            player:Player.getInitPacks(),
+            bullet:Bullet.getInitPacks()
+
+    });
+
+}
+
+Player.getInitPacks = function() {
+    var players = [];
+    for(var i in Player.list)
+        players.push(Player.list[i].getInitPack());
+    return players;
 }
 
 Player.onDisconnect = function(socket){
@@ -169,13 +213,7 @@ Player.refresh = function() {
         var player = Player.list[i];
         player.refresh();
         //console.log(player.x);
-        pack.push({
-            id: player.id,
-            x: player.x,
-            y: player.y
-            //number: player.number
-            //number: socket.number
-        });
+        pack.push(player.getRefreshedPack());
     }
     return pack;
 }
@@ -199,20 +237,69 @@ var Bullet = function(parent, angle) {
         {
             var plyr = Player.list[i];
             if(self.getDistance(plyr) < 30 && self.parent !== plyr.id) {
+                plyr.hp -= 10;
+
+                if(plyr.hp <= 0)
+                {
+                    var attacker = Player.list[self.parent];
+                    if(attacker)
+                    {
+                        attacker.exp += 100;
+
+                        if(attacker.exp >= 200)
+                        {
+                            attacker.level += 1;
+                        }
+                        /*else if(attacker.exp > 400)
+                        {
+                            attacker.level += 1;
+                        }*/
+
+                    }
+
+                    plyr.hp = plyr.maxHp;
+                    plyr.x = Math.floor(Math.random() * 701) + 300;
+                    plyr.y = Math.floor(Math.random() * 701) + 300;
+                }
+
                 self.toRemove = true;
+
+
             }
         }
     }
+
+    self.getInitPack = function() {
+        return{
+            id: self.id,
+            x: self.x,
+            y: self.y
+        };
+
+
+    }
+
+    self.getRefreshedPack = function () {
+        return{
+            id: self.id,
+            x: self.x,
+            y: self.y
+        };
+    }
+
     Bullet.list[self.id] = self;
-    initPack.bullet.push({
-        id:self.id,
-        x:self.x,
-        y:self.y
-    });
+    initPack.bullet.push(self.getInitPack());
     return self;
 }
 
 Bullet.list = {};
+
+Bullet.getInitPacks = function() {
+    var bullets = [];
+    for(var i in Bullet.list)
+        bullets.push(Bullet.list[i].getInitPack());
+    return bullets;
+}
 
 Bullet.refresh = function() {
 
@@ -227,11 +314,7 @@ Bullet.refresh = function() {
             removePack.bullet.push(bullet.id);
         }
         else
-        pack.push({
-            id:bullet.id,
-            x:bullet.x,
-            y:bullet.y
-        });
+        pack.push(bullet.getRefreshedPack());
     }
     return pack;
 }

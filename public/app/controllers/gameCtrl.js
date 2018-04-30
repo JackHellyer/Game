@@ -46,9 +46,25 @@ angular.module('gameCtrl', [])
 
         if(document.getElementById("ctx") != null)
         {
+            var WIDTH = 500;
+            var HEIGHT = 500;
+
+            var Img = {};
+
+            Img.player = new Image();
+            Img.player.src = 'assets/img/robot.png';
+
+
+            Img.bullet = new Image();
+            Img.bullet.src = 'assets/img/Bullet_000.png';
+
+            Img.map = new Image();
+            Img.map.src = 'assets/img/map.png'
 
             var canvas = document.getElementById("ctx").getContext('2d');
+            //canvas.background = "blue";
             canvas.font = '30px Arial';
+
 
             var Player = function(initPack){
                 var self = {};
@@ -56,6 +72,44 @@ angular.module('gameCtrl', [])
                 self.number = initPack.number;
                 self.x = initPack.x;
                 self.y = initPack.y;
+                self.hp = initPack.hp;
+                self.maxHp = initPack.maxHp;
+                self.exp = initPack.exp;
+                self.level = initPack.level;
+
+
+
+                self.drawPlayer = function() {
+
+                    var x = self.x - Player.list[selfId].x + WIDTH/2;
+                    var y = self.y - Player.list[selfId].y + HEIGHT/2;
+
+                    hpBarWidth = 30 * self.hp/self.maxHp;
+                    canvas.fillStyle = "red";
+                    canvas.fillRect(x - hpBarWidth/2, y - 40, hpBarWidth, 4);
+                    canvas.fillStyle = "#000000"
+                    var width = Img.player.width/6 ;
+                    var height = Img.player.height /6;
+
+                    var x = self.x - Player.list[selfId].x + WIDTH/2;
+                    var y = self.y - Player.list[selfId].y + HEIGHT/2;
+
+                    /*if(self.x >= 250 && self.x < 1250 && self.y >= 250 && self.y < 1150)
+                    {*/
+                        canvas.drawImage(Img.player,0,0, Img.player.width, Img.player.height, x-width/2, y-height/2,width, height);
+
+
+                    //}
+
+
+
+                    //canvas.fillText(self.number, self.x, self.y);
+
+
+                    // exp
+                    //canvas.fillText(self.exp, self.x, self.y - 40);
+                }
+
                 Player.list[self.id] = self;
 
                 return self;
@@ -67,13 +121,35 @@ angular.module('gameCtrl', [])
                 self.id = initPack.id;
                 self.x = initPack.x;
                 self.y = initPack.y;
+
+                self.draw = function() {
+
+                    var width = Img.bullet.width /6;
+                    var height = Img.bullet.height /6;
+
+                    var x = self.x - Player.list[selfId].x + WIDTH/2;
+                    var y = self.y - Player.list[selfId].y + HEIGHT/2;
+
+                    //canvas.fillRect(self.x-5, self.y-5, 10,10);
+                    canvas.drawImage(Img.bullet,0,0, Img.bullet.width, Img.bullet.height, x-width/2, y-height/2,width, height);
+
+                }
+
                 Bullet.list[self.id] = self;
                 return self;
 
             }
             Bullet.list = {};
 
+            var selfId = null;
+
             socket.on('init', function(data){
+                //console.log(data.selfId);
+                //console.log(data);
+                if(data.selfId)
+                    selfId = data.selfId;
+
+
                 for(var i = 0; i < data.player.length; i++)
                 {
                     new Player(data.player[i]);
@@ -96,6 +172,10 @@ angular.module('gameCtrl', [])
                             p.x = pack.x;
                         if(pack.y !== undefined)
                             p.y = pack.y;
+                        if(pack.hp !== undefined)
+                            p.hp = pack.hp;
+                        if(pack.exp !== undefined)
+                            p.exp = pack.exp;
                     }
                 }
 
@@ -127,18 +207,50 @@ angular.module('gameCtrl', [])
 
 
             setInterval(function(){
-                canvas.clearRect(0,0,500,500);
 
+                if(!selfId)
+                    return;
+                canvas.clearRect(0,0,500,500);
+                drawMap();
+                drawPlayerLevel();
+                //canvas.rect(300,350,1200,900);
+                //canvas.stroke();
                 for(var i in Player.list)
                 {
-                    canvas.fillText(Player.list[i].number, Player.list[i].x, Player.list[i].y);
 
+                    Player.list[i].drawPlayer();
                 }
                 for(var i in Bullet.list)
                 {
-                    canvas.fillRect(Bullet.list[i].x-5, Bullet.list[i].y-5, 10,10);
+                    Bullet.list[i].draw();
                 }
+
+
+
             }, 40);
+
+            var drawMap = function () {
+                var width = Img.map.width *3;
+                var height = Img.map.height *3;
+
+                var x = WIDTH/2 - Player.list[selfId].x;
+                var y = HEIGHT/2 - Player.list[selfId].y;
+
+                canvas.drawImage(Img.map,x,y,width, height);
+
+            }
+
+            var drawPlayerLevel = function () {
+                var exp = Player.list[selfId].exp;
+                var level = Player.list[selfId].level;
+                canvas.fillStyle = 'white';
+                console.log(Player.list[selfId].level);
+                canvas.fillText('Level ' + level + ' Current EXP: ' + exp, 0,30);
+
+
+
+
+            }
 
             /*socket.on('newPositions', function(data){
                 canvas.clearRect(0,0,500,500);
@@ -166,6 +278,7 @@ angular.module('gameCtrl', [])
                     socket.emit('keyPress', {input:'left', state: true});
                 else if(event.keyCode === 87) // up press, w key
                     socket.emit('keyPress', {input:'up', state: true});
+
 
             }
 
