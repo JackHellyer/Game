@@ -50,7 +50,11 @@
 <header>
     <div class="navbar navbar-inverse" ng-if="main.loggedIn">
         <div class="container">
+            <div class="navbar-header">
+             <div class="navbar-brand"> Robot Wars</div>
+            </div>
             <ul class="nav navbar-nav navbar-right">
+
                 <li ng-if="!main.loggedIn"><a href="/login">Login</a></li>
                 <li ng-if="main.loggedIn" class="navbar-text">Hello {{ main.user.username }}</li>
                 <li ng-if="main.loggedIn"><a href="#" ng-click="main.doLogout()">Logout</a></li>

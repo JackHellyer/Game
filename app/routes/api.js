@@ -63,7 +63,7 @@ module.exports = function(app, express) {
             var user = new User(); // create a new instance of the user model
             user.username = req.body.username; // set the users username (comes from the request)
             user.password = req.body.password; // set the users password (comes from the request)
-
+            user.exp = 0;
             user.save(function(err) {
                 if(err) {
                     // duplicate entry
@@ -127,7 +127,7 @@ module.exports = function(app, express) {
     });
 
 
-    apiRouter.route('/game')
+    //apiRouter.route('/game')
     // on routes that end in /users/:user_id
     // --------------------------------------------
     apiRouter.route('/users/:user_id')
@@ -144,6 +144,32 @@ module.exports = function(app, express) {
                     // return that user
                     res.json(user);
                 }
+            });
+        })
+
+
+        .put(function(req, res) {
+            User.findById(req.params.user_id, function(err, user) {
+
+                if (err) res.send(err);
+
+                // set the new user informtation if it exists in the request
+                if (req.body.exp) user.exp = req.body.exp;
+                if (req.body.username) user.username = req.body.username;
+                //if (req.body.password) user.password = req.body.password;
+
+                // save the user
+                user.save(function(err) {
+                    if(err)
+                    {
+                        res.send(err);
+                    }
+                    else
+                    {
+                        // return a message
+                        res.json({ message: 'User updated!'});
+                    }
+                });
             });
         })
 

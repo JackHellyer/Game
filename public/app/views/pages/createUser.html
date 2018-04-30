@@ -1,22 +1,24 @@
-
+<div class="jumbotron text-center">
+    <h1> Create a User</h1>
+    <div >
 <form class="form-horizontal" ng-submit="user.saveUser()">
 
     <div class="form-group">
-        <label class="col-sm-2 control-label">Username</label>
-        <div class="col-sm-6">
+        <label class="col-sm-3 control-label">Username</label>
+        <div class="col-sm-8">
             <input type="text" class="form-control" ng-model="user.userData.username">
         </div>
     </div>
 
     <div class="form-group">
-        <label class="col-sm-2 control-label">Password</label>
-        <div class="col-sm-6">
+        <label class="col-sm-3 control-label">Password</label>
+        <div class="col-sm-8">
             <input type="password" class="form-control" ng-model="user.userData.password">
         </div>
     </div>
 
     <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-6">
+        <div class="col-sm-offset-3 col-sm-6">
             <button type="submit" class="btn btn-success btn-lg btn-block">Create User</button>
             <a href="/" class="btn btn-default">Return to Login</a>
         </div>
@@ -24,9 +26,11 @@
 </form>
 
 <div class="row show-hide-message" ng-show="user.message">
-    <div class="col-sm-6 col-sm-offset-2">
+    <div class="col-sm-6 col-sm-offset-3">
         <div class="alert alert-info">
             {{ user.message }}
         </div>
+    </div>
+</div>
     </div>
 </div>

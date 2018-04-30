@@ -25,6 +25,9 @@ app.use(morgan('dev'));
 
 mongoose.connect(config.database);
 
+//var db = mongoose.connect(config.database);
+//db.on('error', console.error.bind(console, 'connection error:'));
+//db.users.insert({username:'testdb', password:'test', exp:0});
 app.use(express.static(__dirname + '/public'));
 
 // API ROUTES
@@ -42,11 +45,13 @@ res.sendFile(path.join(__dirname + '/public/app/views/index.html'));
 
 // start the server
 //app.listen(1337);
-server.listen(1337);
+server.listen(config.port);
 console.log('1337 is the magic port!');
 
 var socketList = {};
+//config.database.
 
+//var User = require('./app/models/user');
 
 var Entity = function() {
     var self = {
@@ -245,15 +250,34 @@ var Bullet = function(parent, angle) {
                     if(attacker)
                     {
                         attacker.exp += 100;
+                        //console.log(attacker.exp);
+                        if(attacker.exp == 300)
+                            attacker.level += 1;
+                        //return level;
+                        if(attacker.exp == 500)
+                        {
+                            attacker.level += 1;
+                            //attacker.level = 'Max Level';
 
-                        if(attacker.exp >= 200)
+                        }
+                        if(attacker.exp == 1000)
+                        {
+                            attacker.level += 1;
+
+                        }
+                        if(attacker.exp == 2500)
                         {
                             attacker.level += 1;
                         }
-                        /*else if(attacker.exp > 400)
+                        if(attacker.exp == 5000)
                         {
                             attacker.level += 1;
-                        }*/
+                        }
+                        if(attacker.exp == 10000)
+                        {
+                            attacker.exp +=1;
+                            //attacker.level = 'Max Level';
+                        }
 
                     }
 
@@ -269,6 +293,11 @@ var Bullet = function(parent, angle) {
         }
     }
 
+    self.levelUp = function() {
+        if(self.exp >= 300)
+            self.level += 1;
+        //return level;
+    }
     self.getInitPack = function() {
         return{
             id: self.id,
@@ -343,6 +372,7 @@ io.sockets.on('connection', function (socket){
         //socket.number = "" + Math.floor(10 * Math.random());
 
         socket.on('disconnect', function(){
+
             delete socketList[socket.id];
             Player.onDisconnect(socket);
             console.log("player disconnected");
