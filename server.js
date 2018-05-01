@@ -25,9 +25,6 @@ app.use(morgan('dev'));
 
 mongoose.connect(config.database);
 
-//var db = mongoose.connect(config.database);
-//db.on('error', console.error.bind(console, 'connection error:'));
-//db.users.insert({username:'testdb', password:'test', exp:0});
 app.use(express.static(__dirname + '/public'));
 
 // API ROUTES
@@ -43,16 +40,13 @@ app.get('*', function(req, res) {
 res.sendFile(path.join(__dirname + '/public/app/views/index.html'));
 });
 
-// start the server
-//app.listen(1337);
+
 server.listen(config.port);
 console.log('1337 is the magic port!');
 
 var socketList = {};
-//config.database.
 
-//var User = require('./app/models/user');
-
+// create object that player and bullet will inherit
 var Entity = function() {
     var self = {
         x:250,
@@ -61,16 +55,17 @@ var Entity = function() {
         ySpeed:0,
         id:''
     }
-
+    // refresh the position
     self.refresh = function(){
         self.refreshPosition();
     }
-
+    // refresh position based on the speed
     self.refreshPosition = function(){
         self.x += self.xSpeed;
         self.y += self.ySpeed;
     }
 
+    // get the distance between player and bullet
     self.getDistance = function(pt){
         return Math.sqrt(Math.pow(self.x - pt.x, 2) + Math.pow(self.y - pt.y, 2));
     }
@@ -79,13 +74,15 @@ var Entity = function() {
     return self;
 }
 
+// Player object, takes in id
 var Player = function(id) {
-
+    // inherit entity variabels
     var self = Entity();
+    // set player variables
     self.id = id;
     self.x = 500;
     self.y = 500;
-    self.number = "" + Math.floor(10 * Math.random());
+    //self.number = "" + Math.floor(10 * Math.random());
     self.moveRight = false;
     self.moveLeft = false;
     self.moveUp = false;
@@ -98,17 +95,27 @@ var Player = function(id) {
     self.exp = 0;
     self.level = 1;
 
+    // set self refresh from Entity object
     var super_refresh = self.refresh;
 
+    // call the self refresh from entity and refreshSpeed
     self.refresh = function() {
         self.refreshSpeed();
         super_refresh();
-
+        // shoot bullet at angle
         if(self.attack)
             self.shootBullet(self.mouseAngle);
+        // if player at
+        if(self.attack && self.level > 3)
+            for (var i = -1; i < 3; i++)
+            {
+                self.shootBullet(i * 10 + self.mouseAngle);
+            }
+
+
 
     }
-
+    // function used to shoot bullet
     self.shootBullet = function(angle) {
         var b = Bullet(self.id, angle);
         b.x = self.x;
@@ -117,7 +124,7 @@ var Player = function(id) {
 
 
 
-
+    // functions to allow the user to move but not outside of the map
     self.refreshSpeed = function() {
         if(self.moveRight && self.x < 1450)
             self.xSpeed = self.speed;
@@ -135,6 +142,7 @@ var Player = function(id) {
             self.ySpeed = 0;
     }
 
+    // function used to get the init pack
     self.getInitPack = function() {
         return{
             id:self.id,
@@ -150,6 +158,7 @@ var Player = function(id) {
 
     }
 
+    // function used to get the refreshed pack
     self.getRefreshedPack = function () {
         return{
             id: self.id,
@@ -160,17 +169,21 @@ var Player = function(id) {
             level: self.level
         };
     }
-
+    // add player to list
     Player.list[id] = self;
+    // add player variables to the initPack var
     initPack.player.push(self.getInitPack())
     return self;
 }
 
 Player.list = {};
 
+// function to deal with player connection, takes in socket
 Player.onConnect = function(socket){
+    // assign a socket id to the player
     var player = Player(socket.id);
 
+    // recieve key press from the client, including mouse clicks and postions
     socket.on('keyPress', function (data){
         if(data.input === 'right')
             player.moveRight = data.state;
@@ -190,7 +203,8 @@ Player.onConnect = function(socket){
 
 
 
-
+    // send player and bullet information to the client,
+    // also selfId which is used to show the player their own score
     socket.emit('init',{
             selfId:socket.id,
             player:Player.getInitPacks(),
@@ -199,7 +213,7 @@ Player.onConnect = function(socket){
     });
 
 }
-
+// get all the active player initPacks
 Player.getInitPacks = function() {
     var players = [];
     for(var i in Player.list)
@@ -207,57 +221,70 @@ Player.getInitPacks = function() {
     return players;
 }
 
+// on disconnect remove the player from the player list
 Player.onDisconnect = function(socket){
     delete Player.list[socket.id];
     removePack.player.push(socket.id);
 }
 
+// function to return refreshed pack
 Player.refresh = function() {
     var pack = [];
     for (var i in Player.list) {
         var player = Player.list[i];
         player.refresh();
-        //console.log(player.x);
         pack.push(player.getRefreshedPack());
     }
     return pack;
 }
 
+// bullet object takes in parent(the player who shoot the bullet), the angle he wants to shhot the bullet
 var Bullet = function(parent, angle) {
     var self = Entity();
     self.id = Math.random();
+    // x and y speed used to work out the angle
     self.xSpeed = Math.cos(angle/180*Math.PI) * 10;
     self.ySpeed = Math.sin(angle/180*Math.PI) * 10;
     self.parent = parent;
     self.timer = 0;
+    // toRemove bullet false as default
     self.toRemove = false;
 
+    // set super refresh to entity refresh
     var super_refresh = self.refresh;
     self.refresh = function() {
+        // remove bullet after a certain amount of time
         if(self.timer++ > 100)
             self.toRemove = true;
         super_refresh();
 
+        // loop through all players
         for(var i in Player.list)
         {
             var plyr = Player.list[i];
+            // if distance between the player and the bullet is less then 30 and not the player shooting
             if(self.getDistance(plyr) < 30 && self.parent !== plyr.id) {
+                // shoot player loses 10 hp
                 plyr.hp -= 10;
 
+                // if player is dead
                 if(plyr.hp <= 0)
                 {
+                    // attacker is the player who shoot
                     var attacker = Player.list[self.parent];
+                    // if attacker hasn't disconnected or error
                     if(attacker)
                     {
+                        // attacker gets 100 exp
                         attacker.exp += 100;
-                        //console.log(attacker.exp);
+
+                        // level up system
                         if(attacker.exp == 300)
                             attacker.level += 1;
-                        //return level;
+
                         if(attacker.exp == 500)
                         {
                             attacker.level += 1;
-                            //attacker.level = 'Max Level';
 
                         }
                         if(attacker.exp == 1000)
@@ -281,23 +308,20 @@ var Bullet = function(parent, angle) {
 
                     }
 
+                    // player respawn, health reset to max
                     plyr.hp = plyr.maxHp;
+                    // spawns the player at a random x and y position, have set it so
+                    // they spawn closer to the middle of the mapp and not the edges
                     plyr.x = Math.floor(Math.random() * 701) + 300;
                     plyr.y = Math.floor(Math.random() * 701) + 300;
                 }
-
+                // remove bullet if it hits
                 self.toRemove = true;
-
-
             }
         }
     }
 
-    self.levelUp = function() {
-        if(self.exp >= 300)
-            self.level += 1;
-        //return level;
-    }
+   // get bullet init pack
     self.getInitPack = function() {
         return{
             id: self.id,
@@ -308,6 +332,7 @@ var Bullet = function(parent, angle) {
 
     }
 
+    // get refreshed pack
     self.getRefreshedPack = function () {
         return{
             id: self.id,
@@ -316,13 +341,16 @@ var Bullet = function(parent, angle) {
         };
     }
 
+    //add bullet to list
     Bullet.list[self.id] = self;
+    // add player variable to the bullet initpack var
     initPack.bullet.push(self.getInitPack());
     return self;
 }
 
 Bullet.list = {};
 
+// get all initPacks
 Bullet.getInitPacks = function() {
     var bullets = [];
     for(var i in Bullet.list)
@@ -330,6 +358,7 @@ Bullet.getInitPacks = function() {
     return bullets;
 }
 
+// function to return refreshed pack
 Bullet.refresh = function() {
 
     var pack = [];
@@ -348,49 +377,52 @@ Bullet.refresh = function() {
     return pack;
 }
 
+// socket connection
 io.sockets.on('connection', function (socket){
         console.log('socket connection');
+    // set the socket.id as a random number
     socket.id = Math.random();
+    // add socket to socket list
     socketList[socket.id] = socket;
 
+    // call player on connect function, using the socket as param
     Player.onConnect(socket);
-    //console.log(socket.id);
-    //console.log(Object.keys(io.sockets.sockets));
+
+    // return all of the active sockets
     console.log(Object.keys(socketList));
-    //console.log(Object.keys(playerList));
 
 
 
+    // recieves and send messages from the chatbox to the client
     socket.on('send message', function (data){
         io.sockets.emit('new message', data );
     });
-
-
-
-
-
-        //socket.number = "" + Math.floor(10 * Math.random());
-
+        // on socket disconnect
         socket.on('disconnect', function(){
 
+            // delete the socket from the socket list
             delete socketList[socket.id];
+            // call the disconnect function using socket as param
             Player.onDisconnect(socket);
             console.log("player disconnected");
         });
 });
 
 
-
+// create var to hold the initpack data and the remove pack data
 var initPack = {player:[], bullet:[]};
 var removePack = {player:[], bullet:[]};
 
+// set the interval to 40 ms
 setInterval(function(){
 
+    // pack holds the player refreshed pack and bullet refreshed pack
     var pack = {
         player:Player.refresh(),
         bullet:Bullet.refresh()
     }
 
+    // loop through all the sockets and send the init, refresh and remove packs to the client
     for(var i in socketList){
         var socket = socketList[i];
         socket.emit('init', initPack);
@@ -398,6 +430,7 @@ setInterval(function(){
         socket.emit('remove', removePack);
 
     }
+    // empty player and bullet init and remove pack at the ened of every interval
     initPack.player = [];
     initPack.bullet = [];
     removePack.player = [];

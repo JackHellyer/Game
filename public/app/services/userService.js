@@ -20,7 +20,10 @@ angular.module('userService',[ ])
             return $http.post('/api/users/', userData);
         };
 
-        
+        // update a user
+        userFactory.update = function(id, userData) {
+            return $http.put('/api/users/' + id, userData);
+        };
 
 
 

@@ -26,6 +26,6 @@ angular.module('app.routes', ["ngRoute"])
             })
 
 
-
+        // gets rid of the #
         $locationProvider.html5Mode(true);
     });
