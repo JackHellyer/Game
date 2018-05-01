@@ -7,7 +7,7 @@ can now shoot 4 bullets at one.
 Features that work:
 player can't leave the map.
 player and bullet collision works
-player aim and shhoting works
+player aim and shooting works
 log in and sign up work
 doesn't allow multiple usernames
 chat system works
@@ -16,3 +16,9 @@ respawn after player dies works
 
 Partially working features:
 exp and level system work but reset everytime a user joins the game
+
+Future additions
+add proper sprites e.g they change when the player is moving or shooting
+players get to choose they sprite from a list of around 5
+add enemies, could have a player v enemy 
+add a map with things players can hide behind
